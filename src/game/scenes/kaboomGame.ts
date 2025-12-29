@@ -13,12 +13,13 @@ export function createKaboomGame({ canvas }: Options) {
     width: canvas.clientWidth || 1100,
     height: canvas.clientHeight || 700,
     background: [10, 10, 14],
-    crisp: true, // pixel-art friendly
+    crisp: true,
   });
 
-  start(k);
-  // --- INPUT: walls & click-to-move ---
-  // Вимикаємо контекстне меню, якщо ти захочеш правий клік
+  start(k).catch((error) => {
+    console.error("Failed to start game:", error);
+  });
+
   canvas.addEventListener("contextmenu", (e) => e.preventDefault());
   return () => {
     k.quit();
@@ -33,7 +34,7 @@ async function start(k: KaboomCtx) {
   const TILE_H = 32;
   const DIAGONAL = true;
 
-  const blocked = new Uint8Array(COLS * ROWS); // 0 free, 1 wall
+  const blocked = new Uint8Array(COLS * ROWS);
 
   const idx = (p: Point) => p.y * COLS + p.x;
   const isBlocked = (p: Point) => blocked[idx(p)] === 1;
@@ -58,28 +59,21 @@ async function start(k: KaboomCtx) {
   };
 
   // --- LOAD HERO SPRITESHEET ---
-  // ⚠️ Замінити sliceX/sliceY і ranges під твій файл
-  // Наприклад: якщо в одному рядку 12 кадрів, а рядків 8 -> sliceX=12, sliceY=8
+  let heroLoaded = false;
   try {
-    await k.loadSprite("hero", "sprites/magic-hero.jpg", {
-      sliceX: 12,
-      sliceY: 8,
-      anims: {
-        // приклад: перший ряд (0..11) idle, другий ряд (12..23) walk
-        idle: { from: 0, to: 11, loop: true, speed: 10 },
-        walk: { from: 12, to: 23, loop: true, speed: 12 },
-      },
-    });
+    await k.loadSprite("hero", "/sprites/bean.png");
+    heroLoaded = true;
+    console.log("Hero sprite loaded successfully");
   } catch (error) {
     console.error("Error loading hero sprite:", error);
-    k.add([k.rect(16, 16), k.color(255, 0, 0), k.pos(0, 0)]);
+    heroLoaded = false;
   }
 
   // --- DEMO WALLS ---
   for (let x = 9; x < 16; x++) setBlocked({ x, y: 6 }, 1);
   for (let y = 7; y < 10; y++) setBlocked({ x: 15, y }, 1);
 
-  // --- UI (кабомівський) ---
+  // --- UI ---
   k.add([
     k.text("Shift+Click: wall • Click: move (A*) • WASD/Arrows: step", {
       size: 14,
@@ -94,14 +88,16 @@ async function start(k: KaboomCtx) {
   let moving = false;
   let queuedPath: Point[] = [];
 
-  const player = k.add([
-    k.sprite("hero", { anim: "idle", frame: 0 }),
-    k.pos(1, 1),
-    k.scale(2), // збільш, щоб точно було видно
-    k.anchor("center"),
-    k.z(1000000),
-  ]);
-  player.play("idle");
+  // Створюємо гравця ПІСЛЯ завантаження спрайта
+  const player = heroLoaded
+    ? k.add([k.sprite("hero"), k.pos(0, 0), k.rotate(0)])
+    : k.add([
+        k.rect(16, 16),
+        k.color(255, 0, 0),
+        k.pos(0, 0),
+        k.anchor("center"),
+        k.z(1000000),
+      ]);
 
   placePlayer(playerCell);
 
@@ -109,14 +105,7 @@ async function start(k: KaboomCtx) {
     const p = cellToWorld(cell);
     player.pos = k.vec2(p.x, p.y - 6);
     playerCell = cell;
-    // depth sort: нижче по екрану — вище по z
-    player.z = Math.floor(player.pos.y);
   }
-
-  //   function tileZ(cell: Point) {
-  //     const p = cellToWorld(cell);
-  //     return Math.floor(p.y);
-  //   }
 
   function drawDiamond(
     cx: number,
@@ -135,7 +124,6 @@ async function start(k: KaboomCtx) {
     k.drawPolygon({
       pts,
       color: k.rgb(fill[0], fill[1], fill[2]),
-      // outline працює в новіших версіях kaboom; якщо не буде — просто забери outline
       outline: outline
         ? { color: k.rgb(outline[0], outline[1], outline[2]), width: 1 }
         : undefined,
@@ -144,10 +132,8 @@ async function start(k: KaboomCtx) {
 
   // --- MAP RENDER ---
   k.onDraw(() => {
-    // перерахунок origin (якщо канвас ресайзнувся CSS-ом)
     ({ ox, oy } = calcOrigin());
 
-    // правильний порядок: по рядах y->x (для “ізо-накладання”)
     for (let y = 0; y < ROWS; y++) {
       for (let x = 0; x < COLS; x++) {
         const cell = { x, y };
@@ -167,16 +153,13 @@ async function start(k: KaboomCtx) {
     const cell = worldToCell(m.x, m.y);
     if (!cell) return;
 
-    // Shift+Click => toggle wall
     if (k.isKeyDown("shift")) {
-      // не ставимо стіну на гравця
       if (cell.x === playerCell.x && cell.y === playerCell.y) return;
       setBlocked(cell, isBlocked(cell) ? 0 : 1);
       queuedPath = [];
       return;
     }
 
-    // Click => A* move
     if (isBlocked(cell)) return;
 
     const path = astar(playerCell, cell, {
@@ -189,7 +172,6 @@ async function start(k: KaboomCtx) {
     queuedPath = path.length > 1 ? path.slice(1) : [];
   });
 
-  // --- KEYBOARD step movement ---
   const stepMove = (dx: number, dy: number) => {
     if (moving) return;
     const target = {
@@ -210,13 +192,10 @@ async function start(k: KaboomCtx) {
   k.onKeyPress("left", () => stepMove(-1, 0));
   k.onKeyPress("right", () => stepMove(1, 0));
 
-  // --- PATH FOLLOW LOOP ---
   k.onUpdate(() => {
     if (!moving && queuedPath.length) {
       moveToCell(queuedPath.shift()!);
     }
-    // depth sort
-    player.z = Math.floor(player.pos.y);
   });
 
   function tweenPos(toX: number, toY: number, duration: number) {
@@ -237,15 +216,18 @@ async function start(k: KaboomCtx) {
 
   async function moveToCell(cell: Point) {
     moving = true;
-    player.play("walk");
+    if (heroLoaded && "play" in player) {
+      // player.play("walk");
+    }
 
     const p = cellToWorld(cell);
     const target = { x: p.x, y: p.y - 6 };
-    // тривалість можна прив’язати до відстані
     await tweenPos(target.x, target.y, 0.14);
 
     playerCell = cell;
     moving = false;
-    player.play("idle");
+    if (heroLoaded && "play" in player) {
+      // player.play("idle");
+    }
   }
 }
