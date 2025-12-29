@@ -60,7 +60,9 @@ export class PlayerController {
 
   update() {
     if (!this.player.moving && this.path.length) {
-      this.player.moveTo(this.path.shift()!);
+      const nextCell = this.path.shift()!;
+      const hasMoreMoves = this.path.length > 0;
+      this.player.moveTo(nextCell, undefined, hasMoreMoves);
       return;
     }
 
@@ -74,7 +76,14 @@ export class PlayerController {
       (this.cursors.down.isDown || this.wasd.S.isDown ? 1 : 0) +
       (this.cursors.up.isDown || this.wasd.W.isDown ? -1 : 0);
 
-    if (dx === 0 && dy === 0) return;
+    // ✅ Якщо гравець не рухається і клавіші не натиснуті, перемикаємо на idle
+    if (dx === 0 && dy === 0) {
+      const walkKey = `${this.player.sprite.texture.key}-walk`;
+      if (this.player.sprite.anims.currentAnim?.key === walkKey) {
+        this.player.playIdle();
+      }
+      return;
+    }
 
     const target = {
       x: clamp(this.player.cell.x + Math.sign(dx), 0, this.grid.cols - 1),
@@ -83,6 +92,18 @@ export class PlayerController {
 
     if (this.grid.isBlocked(target)) return;
     this.path = [];
-    this.player.moveTo(target);
+
+    // ✅ Перевіряємо, чи клавіша все ще натиснута - якщо так, це не останній рух
+    const stillPressed =
+      this.cursors.right.isDown ||
+      this.wasd.D.isDown ||
+      this.cursors.left.isDown ||
+      this.wasd.A.isDown ||
+      this.cursors.down.isDown ||
+      this.wasd.S.isDown ||
+      this.cursors.up.isDown ||
+      this.wasd.W.isDown;
+
+    this.player.moveTo(target, undefined, stillPressed);
   }
 }
