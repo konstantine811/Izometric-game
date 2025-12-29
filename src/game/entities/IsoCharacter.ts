@@ -8,7 +8,10 @@ export class IsoCharacter {
   sprite: Phaser.GameObjects.Sprite;
   cell: GridPoint;
   moving = false;
+  jumping = false; // ✅ Стан стрибка
   moveSpeed = 80; // ✅ Швидкість руху по мапі (не впливає на анімацію)
+  jumpHeight = 40; // ✅ Висота стрибка в пікселях
+  jumpDuration = 500; // ✅ Тривалість стрибка в мілісекундах
   private idleTimer: Phaser.Time.TimerEvent | null = null; // ✅ Таймер для відкладеної перемкки на idle
 
   public scene: Phaser.Scene;
@@ -48,6 +51,38 @@ export class IsoCharacter {
 
   playWalk() {
     this.sprite.play(`${SPRITES[this.id].key}-walk`, true);
+  }
+
+  async jump() {
+    if (this.jumping || this.moving) return;
+    this.jumping = true;
+
+    const startY = this.sprite.y;
+    const jumpY = startY - this.jumpHeight;
+
+    // ✅ Анімація підйому
+    await new Promise<void>((resolve) => {
+      this.scene.tweens.add({
+        targets: this.sprite,
+        y: jumpY,
+        duration: this.jumpDuration / 2,
+        ease: "Power2.easeOut",
+        onComplete: () => resolve(),
+      });
+    });
+
+    // ✅ Анімація падіння
+    await new Promise<void>((resolve) => {
+      this.scene.tweens.add({
+        targets: this.sprite,
+        y: startY,
+        duration: this.jumpDuration / 2,
+        ease: "Power2.easeIn",
+        onComplete: () => resolve(),
+      });
+    });
+
+    this.jumping = false;
   }
 
   async moveTo(cell: GridPoint, duration?: number, hasMoreMoves = false) {

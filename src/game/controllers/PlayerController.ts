@@ -15,6 +15,7 @@ export class PlayerController {
     S: Phaser.Input.Keyboard.Key;
     D: Phaser.Input.Keyboard.Key;
   };
+  private spaceKey!: Phaser.Input.Keyboard.Key;
   private path: GridPoint[] = [];
 
   public scene: Phaser.Scene;
@@ -40,6 +41,9 @@ export class PlayerController {
       S: Phaser.Input.Keyboard.Key;
       D: Phaser.Input.Keyboard.Key;
     };
+    this.spaceKey = scene.input.keyboard!.addKey(
+      Phaser.Input.Keyboard.KeyCodes.SPACE
+    );
 
     scene.input.on("pointerdown", (p: Phaser.Input.Pointer) => {
       const wp = p.positionToCamera(scene.cameras.main) as Phaser.Math.Vector2;
@@ -59,6 +63,16 @@ export class PlayerController {
   }
 
   update() {
+    // ✅ Обробка стрибка (пробіл)
+    if (
+      Phaser.Input.Keyboard.JustDown(this.spaceKey) &&
+      !this.player.moving &&
+      !this.player.jumping
+    ) {
+      this.player.jump();
+      return;
+    }
+
     if (!this.player.moving && this.path.length) {
       const nextCell = this.path.shift()!;
       const hasMoreMoves = this.path.length > 0;
@@ -66,7 +80,7 @@ export class PlayerController {
       return;
     }
 
-    if (this.player.moving) return;
+    if (this.player.moving || this.player.jumping) return;
 
     const dx =
       (this.cursors.right.isDown || this.wasd.D.isDown ? 1 : 0) +
