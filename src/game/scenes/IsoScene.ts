@@ -1,7 +1,8 @@
 import Phaser from "phaser";
-import type { GridPoint } from "../types/grid-types";
+
 import { isoToScreen, screenToIso } from "../utils/iso";
 import { astar } from "../utils/astar";
+import type { GridPoint } from "../types/grid-types";
 
 const TILE_W = 64;
 const TILE_H = 32;

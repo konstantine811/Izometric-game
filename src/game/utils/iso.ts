@@ -1,10 +1,4 @@
-import type { Point } from "../types/grid-types";
-
-export const keyOf = (p: Point) => `${p.x},${p.y}`;
-export const parseKey = (k: string): Point => {
-  const [x, y] = k.split(",").map(Number);
-  return { x, y };
-};
+import type { GridPoint } from "../types/grid-types";
 
 export function isoToScreen(
   gx: number,
@@ -34,5 +28,8 @@ export function screenToIso(
   return { gx, gy };
 }
 
-export const clamp = (v: number, a: number, b: number) =>
-  Math.max(a, Math.min(b, v));
+export const keyOf = (p: GridPoint) => `${p.x},${p.y}`;
+export const parseKey = (k: string): GridPoint => {
+  const [x, y] = k.split(",").map(Number);
+  return { x, y };
+};

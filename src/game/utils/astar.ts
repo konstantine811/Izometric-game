@@ -1,25 +1,26 @@
-import type { Point } from "../types/grid-types";
+import type { GridPoint } from "../types/grid-types";
 import { keyOf, parseKey } from "./iso";
 
 export type Grid = {
   cols: number;
   rows: number;
-  isBlocked: (p: Point) => boolean;
+  isBlocked: (p: GridPoint) => boolean;
   diagonal?: boolean;
 };
 
-function heuristic(a: Point, b: Point, diagonal: boolean) {
+function heuristic(a: GridPoint, b: GridPoint, diagonal: boolean) {
   const dx = Math.abs(a.x - b.x);
   const dy = Math.abs(a.y - b.y);
-  if (!diagonal) return dx + dy; // Manhattan
+  if (!diagonal) return dx + dy;
+
   // Octile
   const F = Math.SQRT2 - 1;
   return dx < dy ? F * dx + dy : F * dy + dx;
 }
 
-function neighbors(p: Point, grid: Grid) {
+function neighbors(p: GridPoint, grid: Grid) {
   const { cols, rows, diagonal } = grid;
-  const list: Array<{ p: Point; cost: number }> = [];
+  const list: Array<{ p: GridPoint; cost: number }> = [];
 
   const add = (x: number, y: number, cost: number) => {
     if (x < 0 || y < 0 || x >= cols || y >= rows) return;
@@ -66,7 +67,11 @@ function bestOpen(open: string[], fScore: Map<string, number>) {
   return best;
 }
 
-export function astar(start: Point, goal: Point, grid: Grid): Point[] {
+export function astar(
+  start: GridPoint,
+  goal: GridPoint,
+  grid: Grid
+): GridPoint[] {
   const diagonal = !!grid.diagonal;
   const startKey = keyOf(start);
   const goalKey = keyOf(goal);
@@ -81,9 +86,9 @@ export function astar(start: Point, goal: Point, grid: Grid): Point[] {
 
   while (open.length) {
     const currentKey = bestOpen(open, fScore);
-
     if (currentKey === goalKey) return reconstruct(cameFrom, currentKey);
 
+    // remove current
     open.splice(open.indexOf(currentKey), 1);
     closed.add(currentKey);
 
@@ -94,17 +99,6 @@ export function astar(start: Point, goal: Point, grid: Grid): Point[] {
       const nk = keyOf(n.p);
       if (closed.has(nk)) continue;
       if (grid.isBlocked(n.p)) continue;
-
-      // анти corner-cutting (коли діагональ “протискається” між двома стінами)
-      if (
-        diagonal &&
-        Math.abs(n.p.x - current.x) === 1 &&
-        Math.abs(n.p.y - current.y) === 1
-      ) {
-        const p1 = { x: n.p.x, y: current.y };
-        const p2 = { x: current.x, y: n.p.y };
-        if (grid.isBlocked(p1) && grid.isBlocked(p2)) continue;
-      }
 
       const tentativeG = curG + n.cost;
       const prevG = gScore.get(nk);
