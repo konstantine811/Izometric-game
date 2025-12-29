@@ -140,6 +140,14 @@ export class TileEditor {
       return;
     }
 
+    const tileConfig = TILES_BY_ID.get(this.selectedTileId);
+    if (!tileConfig) {
+      this.previewGraphics.setVisible(false);
+      return;
+    }
+
+    // ✅ Отримуємо розмір тайла в клітинках
+    const gridSize = tileConfig.gridSize ?? { width: 1, height: 1 };
     const { tileW: W, tileH: H } = this.iso;
 
     // ✅ Очищаємо попередній preview
@@ -158,34 +166,64 @@ export class TileEditor {
       }
 
       // ✅ Малюємо preview на всіх тайлах
+      const renderedCells = new Set<string>();
       for (const pathCell of cells) {
         if (!this.grid.inBounds(pathCell)) continue;
 
-        const { x: sx, y: sy } = this.iso.cellToScreen(pathCell);
+        // ✅ Пропускаємо, якщо ця клітинка вже частина більшого тайла
+        const cellKey = `${pathCell.x},${pathCell.y}`;
+        if (renderedCells.has(cellKey)) continue;
 
-        // ✅ Малюємо напівпрозорий зелений ромб
+        // ✅ Обчислюємо центр області тайла
+        const centerX = pathCell.x + (gridSize.width - 1) / 2;
+        const centerY = pathCell.y + (gridSize.height - 1) / 2;
+        const centerPoint: GridPoint = { x: centerX, y: centerY };
+        const { x: sx, y: sy } = this.iso.cellToScreen(centerPoint);
+
+        // ✅ Малюємо напівпрозорий зелений ромб з урахуванням розміру тайла
+        const previewW = W * gridSize.width;
+        const previewH = H * gridSize.height;
+
         this.previewGraphics.fillStyle(0x00ff00, 0.4); // ✅ Зелений колір, 40% прозорості
         this.previewGraphics.lineStyle(2, 0x00ff00, 0.8); // ✅ Зелений контур, 80% прозорості
         this.previewGraphics.beginPath();
-        this.previewGraphics.moveTo(sx, sy - H / 2); // Верх
-        this.previewGraphics.lineTo(sx + W / 2, sy); // Право
-        this.previewGraphics.lineTo(sx, sy + H / 2); // Низ
-        this.previewGraphics.lineTo(sx - W / 2, sy); // Ліво
+        this.previewGraphics.moveTo(sx, sy - previewH / 2); // Верх
+        this.previewGraphics.lineTo(sx + previewW / 2, sy); // Право
+        this.previewGraphics.lineTo(sx, sy + previewH / 2); // Низ
+        this.previewGraphics.lineTo(sx - previewW / 2, sy); // Ліво
         this.previewGraphics.closePath();
         this.previewGraphics.fillPath();
         this.previewGraphics.strokePath();
+
+        // ✅ Позначаємо всі клітинки, які займає цей тайл
+        for (let dy = 0; dy < gridSize.height; dy++) {
+          for (let dx = 0; dx < gridSize.width; dx++) {
+            const cellX = pathCell.x + dx;
+            const cellY = pathCell.y + dy;
+            if (cellX < this.grid.cols && cellY < this.grid.rows) {
+              renderedCells.add(`${cellX},${cellY}`);
+            }
+          }
+        }
       }
     } else {
       // ✅ Якщо не малюємо, показуємо preview тільки на поточному тайлі
-      const { x: sx, y: sy } = this.iso.cellToScreen(cell);
+      // ✅ Обчислюємо центр області тайла
+      const centerX = cell.x + (gridSize.width - 1) / 2;
+      const centerY = cell.y + (gridSize.height - 1) / 2;
+      const centerPoint: GridPoint = { x: centerX, y: centerY };
+      const { x: sx, y: sy } = this.iso.cellToScreen(centerPoint);
+
+      const previewW = W * gridSize.width;
+      const previewH = H * gridSize.height;
 
       this.previewGraphics.fillStyle(0x00ff00, 0.4); // ✅ Зелений колір, 40% прозорості
       this.previewGraphics.lineStyle(2, 0x00ff00, 0.8); // ✅ Зелений контур, 80% прозорості
       this.previewGraphics.beginPath();
-      this.previewGraphics.moveTo(sx, sy - H / 2); // Верх
-      this.previewGraphics.lineTo(sx + W / 2, sy); // Право
-      this.previewGraphics.lineTo(sx, sy + H / 2); // Низ
-      this.previewGraphics.lineTo(sx - W / 2, sy); // Ліво
+      this.previewGraphics.moveTo(sx, sy - previewH / 2); // Верх
+      this.previewGraphics.lineTo(sx + previewW / 2, sy); // Право
+      this.previewGraphics.lineTo(sx, sy + previewH / 2); // Низ
+      this.previewGraphics.lineTo(sx - previewW / 2, sy); // Ліво
       this.previewGraphics.closePath();
       this.previewGraphics.fillPath();
       this.previewGraphics.strokePath();
@@ -232,6 +270,9 @@ export class TileEditor {
     const tileConfig = TILES_BY_ID.get(this.selectedTileId!);
     if (!tileConfig) return;
 
+    // ✅ Отримуємо розмір тайла в клітинках
+    const gridSize = tileConfig.gridSize ?? { width: 1, height: 1 };
+
     let cells: GridPoint[];
 
     if (this.drawMode === "area") {
@@ -243,13 +284,32 @@ export class TileEditor {
     }
 
     let hasChanges = false;
+    const paintedCells = new Set<string>(); // ✅ Відстежуємо вже намальовані клітинки
 
     for (const pathCell of cells) {
       if (!this.grid.inBounds(pathCell)) continue;
 
-      // ✅ Встановлюємо тайл
+      // ✅ Перевіряємо, чи ця клітинка вже частина більшого тайла
+      const cellKey = `${pathCell.x},${pathCell.y}`;
+      if (paintedCells.has(cellKey)) continue;
+
+      // ✅ Встановлюємо тайл на початковій клітинці
       this.grid.setTileType(pathCell, this.selectedTileId!, tileConfig);
       hasChanges = true;
+
+      // ✅ Позначаємо всі клітинки, які займає цей тайл
+      for (let dy = 0; dy < gridSize.height; dy++) {
+        for (let dx = 0; dx < gridSize.width; dx++) {
+          const cellX = pathCell.x + dx;
+          const cellY = pathCell.y + dy;
+          if (cellX < this.grid.cols && cellY < this.grid.rows) {
+            paintedCells.add(`${cellX},${cellY}`);
+            // ✅ Встановлюємо тайл на всіх клітинках, які він займає
+            const cell: GridPoint = { x: cellX, y: cellY };
+            this.grid.setTileType(cell, this.selectedTileId!, tileConfig);
+          }
+        }
+      }
     }
 
     // ✅ Оновлюємо відображення тільки якщо були зміни

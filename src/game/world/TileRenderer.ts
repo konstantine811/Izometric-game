@@ -27,16 +27,31 @@ export class TileRenderer {
   redraw() {
     this.layer.removeAll(true);
     const { tileW: W, tileH: H } = this.iso;
+    const renderedTiles = new Set<string>(); // ✅ Відстежуємо вже відрендерені тайли
 
     for (let y = 0; y < this.grid.rows; y++) {
       for (let x = 0; x < this.grid.cols; x++) {
         const p: GridPoint = { x, y };
-        const { x: sx, y: sy } = this.iso.cellToScreen(p);
+        const cellKey = `${x},${y}`;
+
+        // ✅ Пропускаємо, якщо ця клітинка вже частина більшого тайла
+        if (renderedTiles.has(cellKey)) continue;
 
         // ✅ Отримуємо тип тайла або використовуємо дефолтний
         const tileId = this.grid.getTileType(p) || "floor";
         const key = `tile-${tileId}`;
         const tileConfig = TILE_CONFIGS.find((t) => t.id === tileId);
+
+        // ✅ Отримуємо розмір тайла в клітинках
+        const gridSize = tileConfig?.gridSize ?? { width: 1, height: 1 };
+        const gridW = gridSize.width;
+        const gridH = gridSize.height;
+
+        // ✅ Обчислюємо центр області тайла
+        const centerX = x + (gridW - 1) / 2;
+        const centerY = y + (gridH - 1) / 2;
+        const centerPoint: GridPoint = { x: centerX, y: centerY };
+        const { x: sx, y: sy } = this.iso.cellToScreen(centerPoint);
 
         const spr = this.scene.add.image(sx, sy, key).setOrigin(0.5, 0.5);
 
@@ -45,8 +60,8 @@ export class TileRenderer {
         const scaleX = typeof scale === "number" ? scale : scale.x;
         const scaleY = typeof scale === "number" ? scale : scale.y;
 
-        // ✅ Фіксуємо розмір зображення до розміру тайла з урахуванням масштабу
-        spr.setDisplaySize(W * scaleX, H * scaleY);
+        // ✅ Фіксуємо розмір зображення до розміру тайла з урахуванням кількості клітинок та масштабу
+        spr.setDisplaySize(W * gridW * scaleX, H * gridH * scaleY);
 
         // ✅ Вимкнемо фільтри та ефекти, які можуть додавати контур
         spr.setTint(0xffffff); // Без відтінку
@@ -57,10 +72,18 @@ export class TileRenderer {
           spr.texture.setFilter(Phaser.Textures.FilterMode.LINEAR);
         }
 
-        // ✅ Прибрано маску для оптимізації продуктивності
-        // Якщо потрібно обрізання, можна використати інший підхід (наприклад, обрізати текстуру)
-
         this.layer.add(spr);
+
+        // ✅ Позначаємо всі клітинки, які займає цей тайл
+        for (let dy = 0; dy < gridH; dy++) {
+          for (let dx = 0; dx < gridW; dx++) {
+            const cellX = x + dx;
+            const cellY = y + dy;
+            if (cellX < this.grid.cols && cellY < this.grid.rows) {
+              renderedTiles.add(`${cellX},${cellY}`);
+            }
+          }
+        }
       }
     }
   }
