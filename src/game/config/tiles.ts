@@ -33,7 +33,7 @@ export const TILE_CONFIGS: TileConfig[] = [
     id: "wall",
     type: "wall",
     walkable: false,
-    color: 0x111111,
+    color: 0x8B4513, // Коричневий колір для стін будинків
     name: "Стіна",
     // imageUrl: "/sprites/tiles/wall.png",
   },
@@ -60,15 +60,15 @@ export const TILE_CONFIGS: TileConfig[] = [
     id: "water",
     type: "water",
     walkable: false,
-    color: 0x3a5f8f,
+    color: 0x1E90FF, // Яскравий блакитний для води/ріки
     name: "Вода",
     // imageUrl: "/sprites/tiles/water.png",
   },
   {
     id: "stone",
     type: "stone",
-    walkable: false,
-    color: 0x888888,
+    walkable: true, // Дорога прохідна!
+    color: 0x696969, // Темно-сірий для дороги/бруківки
     name: "Камінь",
     // imageUrl: "/tiles/stone.png",
   },

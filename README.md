@@ -1,75 +1,205 @@
-# React + TypeScript + Vite
+# 🎮 Izometric Game - Cyberpunk Marsian Edition
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Ізометрична гра на базі Phaser 3 з підтримкою 8-напрямкових анімацій та динамічної зміни персонажів.
 
-Currently, two official plugins are available:
+![Version](https://img.shields.io/badge/version-0.0.0-blue)
+![Phaser](https://img.shields.io/badge/Phaser-3.90.0-green)
+![React](https://img.shields.io/badge/React-19.2.0-blue)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.9.3-blue)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 🚀 Швидкий старт
 
-## React Compiler
+### Локальний запуск:
+```bash
+# Встановити залежності
+npm install
 
-The React Compiler is enabled on this template. See [this documentation](https://react.dev/learn/react-compiler) for more information.
+# Запустити dev-сервер
+npm run dev
 
-Note: This will impact Vite dev & build performances.
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+# Відкрити в браузері
+# http://localhost:5173/
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### 🌐 Онлайн версія (Vercel):
+**Гра доступна онлайн:** [Деплой на Vercel](https://vercel.com)
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+Гра автоматично деплоїться на Vercel при кожному push в `main` гілку.
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+**Як налаштувати Vercel:**
+1. Перейдіть на [vercel.com](https://vercel.com)
+2. Увійдіть через GitHub
+3. Натисніть "Add New Project"
+4. Виберіть репозиторій `SerhiiDubei/isometric-game-prototype`
+5. Vercel автоматично визначить налаштування (Vite)
+6. Натисніть "Deploy"
+7. Готово! Гра буде доступна за URL, який надасть Vercel
+
+## 🎯 Керування
+
+| Клавіша | Дія |
+|---------|-----|
+| **↑↓←→** або **WASD** | Рух персонажа (8 напрямків) |
+| **Клік мишкою** | Рух до точки з автопошуком шляху |
+| **Пробіл** | Стрибок |
+| **C** | Зміна персонажа |
+
+## 🎨 Персонажі
+
+### 👽 Cyberpunk Marsian (за замовчуванням)
+- 8-напрямкова анімація (N, NE, E, SE, S, SW, W, NW)
+- 6 кадрів на кожен напрямок
+- Розмір: 96×96 пікселів
+- Стиль: футуристичний кіберпанк
+
+### 🧑 Hero
+- Класичний персонаж
+- Універсальна анімація ходьби
+- Розмір: 184×325 пікселів
+
+## 📚 Документація
+
+### Для користувачів
+- **[README_UA.md](./README_UA.md)** - Повний опис українською
+- **[QUICK_TEST.md](./QUICK_TEST.md)** - Швидкий тест за 2 хвилини
+- **[CONTROLS_GUIDE.md](./CONTROLS_GUIDE.md)** - Детальний гайд по керуванню
+- **[TROUBLESHOOTING.md](./TROUBLESHOOTING.md)** - Вирішення проблем
+
+### Для розробників
+- **[CHARACTER_INTEGRATION.md](./CHARACTER_INTEGRATION.md)** - Технічна документація інтеграції
+- **[INTEGRATION_SUMMARY.md](./INTEGRATION_SUMMARY.md)** - Звіт про виконану роботу
+
+## 🛠️ Технології
+
+- **Phaser 3.90.0** - ігровий движок
+- **React 19** - UI фреймворк  
+- **TypeScript 5.9** - мова програмування
+- **Vite (Rolldown)** - швидка збірка
+- **Tailwind CSS 4** - стилізація
+
+## 📂 Структура проекту
+
 ```
+src/
+├── game/
+│   ├── assets/          # Завантаження ресурсів та анімацій
+│   ├── controllers/     # Керування персонажем
+│   ├── entities/        # Ігрові сутності (персонажі)
+│   ├── scenes/          # Ігрові сцени
+│   ├── utils/           # Допоміжні функції (A*, напрямки)
+│   └── world/           # Світ гри (сітка, тайли)
+├── components/          # React компоненти
+└── main.tsx            # Точка входу
+
+public/
+└── sprites/
+    ├── cyberpunk-marsian/  # 8-напрямковий персонаж
+    │   ├── animations/     # 48 PNG файлів (8×6)
+    │   ├── rotations/      # 8 статичних зображень
+    │   └── metadata.json
+    └── capguy-walk-1472.png  # Hero spritesheet
+```
+
+## ✨ Особливості
+
+- ✅ **Ізометрична проекція** - красива 2.5D графіка
+- ✅ **8-напрямкова анімація** - плавний рух у всіх напрямках
+- ✅ **Автоматичне визначення напрямку** - анімація підбирається автоматично
+- ✅ **Пошук шляху A*** - обхід перешкод
+- ✅ **Редактор рівнів** - створюйте свої карти
+- ✅ **Зміна персонажів** - переключайтеся на льоту
+- ✅ **Hot Module Replacement** - миттєві оновлення при розробці
+
+## 📝 Команди
+
+```bash
+npm run dev      # Запуск dev-сервера (localhost:5173)
+npm run build    # Збірка для продакшну
+npm run preview  # Перегляд продакшн збірки
+npm run lint     # Перевірка коду ESLint
+```
+
+## 🎮 Як грати
+
+1. **Запустіть гру**: `npm run dev`
+2. **Відкрийте браузер**: http://localhost:5173/
+3. **Рухайтеся**: WASD або стрілки
+4. **Стрибайте**: Пробіл
+5. **Змініть персонажа**: C
+
+Детальніше в [CONTROLS_GUIDE.md](./CONTROLS_GUIDE.md)
+
+## 🔧 Налаштування
+
+### Швидкість руху
+```typescript
+// src/game/entities/IsoCharacter.ts
+moveSpeed = 80; // мілісекунд на клітинку
+```
+
+### Параметри стрибка
+```typescript
+jumpHeight = 40; // пікселів
+jumpDuration = 500; // мілісекунд
+```
+
+### Швидкість анімації
+```typescript
+// src/game/assets/AnimRegistry.ts
+frameRate: 12, // FPS
+```
+
+## 🐛 Проблеми?
+
+Дивіться [TROUBLESHOOTING.md](./TROUBLESHOOTING.md) для вирішення типових проблем.
+
+## 🚀 Додавання нових персонажів
+
+1. Додайте спрайти в `public/sprites/your-character/`
+2. Оновіть `src/game/assets/AssetManifest.ts`
+3. Додайте в список `availableCharacters` в `PlayerController.ts`
+
+Детальна інструкція в [CHARACTER_INTEGRATION.md](./CHARACTER_INTEGRATION.md)
+
+## 📊 Статистика проекту
+
+- **Файлів коду**: 25+ TypeScript файлів
+- **Спрайтів**: 56 PNG файлів
+- **Анімацій**: 18 (8 walk + 8 idle + 2 default)
+- **Напрямків руху**: 8 (повна підтримка)
+- **Розмір збірки**: ~2MB (dev)
+
+## 🙏 Подяки
+
+- Оригінальний проект: [Izometric-game](https://github.com/konstantine811/Izometric-game)
+- Phaser 3 Framework
+- React Team
+- Vite Team
+
+## 📄 Ліцензія
+
+Private
+
+## 🔗 Посилання
+
+- **Репозиторій**: [GitHub](https://github.com/konstantine811/Izometric-game)
+- **Phaser Docs**: [photonstorm.github.io/phaser3-docs](https://photonstorm.github.io/phaser3-docs/)
+- **React Docs**: [react.dev](https://react.dev/)
+
+---
+
+**Версія**: 0.0.0  
+**Дата оновлення**: 30 грудня 2025  
+**Статус**: ✅ Готово до використання
+
+## React + Vite Template Info
+
+This project uses React 19 with TypeScript and Vite (Rolldown) for fast development.
+
+### React Compiler
+
+The React Compiler is enabled. See [React Compiler docs](https://react.dev/learn/react-compiler) for details.
+
+### ESLint Configuration
+
+For production, consider enabling type-aware lint rules. See original template docs above for details.
